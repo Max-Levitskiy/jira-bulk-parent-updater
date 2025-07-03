@@ -1,36 +1,14 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - main # Trigger for version bumping
-    tags:
-      - 'v*.*.*' # Trigger for building and releasing
+  workflow_dispatch:
+    inputs:
+      new_version:
+        description: 'The new version to release'
+        required: true
 
 jobs:
-  bump-version:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' # Only run on pushes to main branch
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: '0' # Required for phips28/gh-action-bump-version to fetch full history
-
-    - name: Bump version and create tag
-      id: bump
-      uses: phips28/gh-action-bump-version@v11.0.7
-      with:
-        default: 'patch'
-        tag-prefix: 'v'
-      env:
-        GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }} # Use PAT to trigger subsequent workflow
-
   build-and-release:
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') # Only run on pushes of tags starting with 'v'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -38,8 +16,9 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      # No 'ref' is needed here; it will automatically checkout the tag that triggered this workflow run
-      
+      with:
+        ref: v${{ github.event.inputs.new_version }} # Checkout the specific tag passed from the bump-version workflow
+
     - name: Setup Bun
       uses: oven-sh/setup-bun@v1
       with:
@@ -63,8 +42,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref_name }} # Use the tag that triggered this workflow run
-        release_name: Release ${{ github.ref_name }}
+        tag_name: v${{ github.event.inputs.new_version }}
+        release_name: Release v${{ github.event.inputs.new_version }}
         draft: false
         prerelease: false
 
