@@ -1,0 +1,30 @@
+{
+    "name": "jira-parent-updater",
+    "version": "1.0.0",
+    "description": "Update Jira issue parents from CSV export",
+    "main": "src/index.ts",
+    "bin": {
+        "jira-parent-updater": "src/index.ts"
+    },
+    "scripts": {
+        "start": "bun src/index.ts",
+        "build:mac": "bun build src/index.ts --compile --minify --sourcemap --target=bun-darwin-arm64 --outfile bin/jira-parent-updater-mac",
+        "build:linux": "bun build src/index.ts --compile --minify --sourcemap --target=bun-linux-x64 --outfile bin/jira-parent-updater-linux",
+        "build:windows": "bun build src/index.ts --compile --minify --sourcemap --target=bun-windows-x64 --outfile bin/jira-parent-updater-win.exe"
+    },
+    "keywords": ["jira", "csv", "parent", "update"],
+    "author": "Max Levitskiy",
+    "license": "MIT",
+    "dependencies": {
+        "commander": "^11.1.0",
+        "csv-parser": "^3.0.0"
+    },
+    "devDependencies": {
+        "@types/bun": "^1.2.17",
+        "@types/node": "^20.10.0",
+        "typescript": "^5.3.0"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}
