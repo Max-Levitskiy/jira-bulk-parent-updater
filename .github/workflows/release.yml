@@ -8,10 +8,25 @@ on:
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: '0'
+
+    - name: Bump version and create tag
+      id: bump_version
+      uses: phips28/gh-action-bump-version@v11.0.7
+      with:
+        default: 'patch'
+        tag-prefix: 'v'
+        skip-commit: 'true'
+        skip-push: 'true'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Setup Bun
       uses: oven-sh/setup-bun@v1
@@ -36,8 +51,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: v${{ github.ref_name }}
-        release_name: Release v${{ github.ref_name }}
+        tag_name: ${{ steps.bump_version.outputs.new-version }}
+        release_name: Release ${{ steps.bump_version.outputs.new-version }}
         draft: false
         prerelease: false
 
