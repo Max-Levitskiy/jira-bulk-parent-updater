@@ -17,7 +17,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        ref: v${{ github.event.inputs.new_version }} # Checkout the specific tag passed from the bump-version workflow
+        ref: v${{ github.event.inputs.new_version }}
 
     - name: Setup Bun
       uses: oven-sh/setup-bun@v1
