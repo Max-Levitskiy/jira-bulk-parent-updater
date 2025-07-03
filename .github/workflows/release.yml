@@ -27,7 +27,7 @@ jobs:
         default: 'patch'
         tag-prefix: 'v'
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }} # Use PAT to trigger subsequent workflow
 
   build-and-release:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') # Only run on pushes of tags starting with 'v'
