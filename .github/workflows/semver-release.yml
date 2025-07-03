@@ -1,13 +1,13 @@
 name: Release
 
 on:
-  pull_request:
-    types: [closed]
+  push:
+    branches:
+      - main
 
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged
     permissions:
       contents: write
 
@@ -23,6 +23,17 @@ jobs:
       with:
         release_branch: main
         release_strategy: release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.semver.outputs.tag }}
+        name: Release ${{ steps.semver.outputs.tag }}
+        draft: false
+        prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -49,19 +60,31 @@ jobs:
       run: bun run build:windows
 
     - name: Upload macOS Binary
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: jira-parent-updater-mac
-        path: ./bin/jira-parent-updater-mac
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./bin/jira-parent-updater-mac
+        asset_name: jira-parent-updater-mac
+        asset_content_type: application/octet-stream
 
     - name: Upload Linux Binary
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: jira-parent-updater-linux
-        path: ./bin/jira-parent-updater-linux
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./bin/jira-parent-updater-linux
+        asset_name: jira-parent-updater-linux
+        asset_content_type: application/octet-stream
 
     - name: Upload Windows Binary
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: jira-parent-updater-win.exe
-        path: ./bin/jira-parent-updater-win.exe 
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./bin/jira-parent-updater-win.exe
+        asset_name: jira-parent-updater-win.exe
+        asset_content_type: application/octet-stream 
