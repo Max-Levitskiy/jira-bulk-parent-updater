@@ -1,15 +1,13 @@
 name: Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      new_version:
-        description: 'The new version to release'
-        required: true
+  pull_request:
+    types: [closed]
 
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged
     permissions:
       contents: write
 
@@ -17,7 +15,21 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        ref: v${{ github.event.inputs.new_version }}
+        fetch-depth: '0' # Required for semver-release-action
+
+    - name: Semantic Release
+      id: semver
+      uses: K-Phoen/semver-release-action@master
+      with:
+        release_branch: main
+        release_strategy: release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Checkout Tagged Code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ steps.semver.outputs.tag }}
 
     - name: Setup Bun
       uses: oven-sh/setup-bun@v1
@@ -36,23 +48,12 @@ jobs:
     - name: Build for Windows
       run: bun run build:windows
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: v${{ github.event.inputs.new_version }}
-        release_name: Release v${{ github.event.inputs.new_version }}
-        draft: false
-        prerelease: false
-
     - name: Upload macOS Binary
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        upload_url: ${{ github.event.release.upload_url }}
         asset_path: ./bin/jira-parent-updater-mac
         asset_name: jira-parent-updater-mac
         asset_content_type: application/octet-stream
@@ -62,7 +63,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        upload_url: ${{ github.event.release.upload_url }}
         asset_path: ./bin/jira-parent-updater-linux
         asset_name: jira-parent-updater-linux
         asset_content_type: application/octet-stream
@@ -72,7 +73,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        upload_url: ${{ github.event.release.upload_url }}
         asset_path: ./bin/jira-parent-updater-win.exe
         asset_name: jira-parent-updater-win.exe
         asset_content_type: application/octet-stream 
